@@ -1,353 +1,77 @@
-================================================================================
-        SOFTWARE REQUIREMENTS SPECIFICATION (SRS)
-        HOTEL BOOKINGS ANALYSIS - ROOM PRICING AND FRONT-DESK STAFFING
-================================================================================
-
-Date             : 21 November 2026
-Prepared by      : Shaurya
-Project context  : HCL Training - Python data analysis project
-Industry         : Hospitality / Tourism
-
+SOFTWARE REQUIREMENTS SPECIFICATION (SRS)
+Project  : Hotel Bookings Analysis (Hospitality / Tourism)
+Author   : Shaurya
+Date     : 21 November 2026
+Version  : 1.0
 
 --------------------------------------------------------------------------------
 1. INTRODUCTION
 --------------------------------------------------------------------------------
-
-1.1 Purpose
-    This document describes the requirements of the Hotel Bookings Analysis
-    program. The program studies room reservations, stay durations, booking
-    channels and cancellations, and gives a hotel the information it needs to
-    optimise room pricing and plan front-desk staffing.
-
-1.2 Scope
-    The software is a single Python script (hotel_analysis.py) that:
-      - reads one CSV file of booking records (13_hotel_bookings.csv),
-      - cleans the data (missing values and duplicates),
-      - calculates bookings, room nights, revenue, occupancy and cancellation
-        statistics,
-      - prints all results and five business recommendations in the terminal.
-    The program does not create any output files, does not use a database and
-    has no graphical interface.
-
-1.3 Definitions and abbreviations
-    SRS       Software Requirements Specification
-    OTA       Online Travel Agency (MakeMyTrip, Booking.com, Agoda)
-    ADR/Rate  Room_Rate, the price of one room for one night (Rs)
-    Lead time Days between the booking date and the check-in date
-    Room night One room occupied for one night
-    Occupancy % Room nights sold / (rooms available x days) x 100
-    RevPAR    Revenue per available room per day
-    IQR       Inter-quartile range (Q3 - Q1), used to find outliers
-    Non-canceled booking  Any booking whose Booking_Status is not "Canceled"
-
-1.4 References
-    - Assignment brief: "Industry: Hospitality / Tourism - Hotel bookings
-      analysis" (15 tasks)
-    - pandas documentation (https://pandas.pydata.org)
-    - NumPy documentation (https://numpy.org)
-
+Purpose : Analyse room reservations, stay durations, booking channels and
+          cancellations to help a hotel optimise room pricing and front-desk
+          staffing.
+Scope   : A Python script (hotel_analysis.py) that reads one CSV file, cleans
+          the data, calculates the required statistics and prints the results
+          and five recommendations in the terminal. It writes no files.
 
 --------------------------------------------------------------------------------
 2. OVERALL DESCRIPTION
 --------------------------------------------------------------------------------
-
-2.1 Product perspective
-    A stand-alone, command-line analysis script. Input is a CSV file in the
-    same folder as the script; output is text in the terminal.
-
-2.2 Product functions (summary)
-    1. Load and inspect the booking records.
-    2. Find missing values and duplicate Booking_ID records.
-    3. Fill missing Lead_Time_Days and Room_Rate with justified values.
-    4. Convert Checkin_Date to a date type; get arrival month and weekday.
-    5. Calculate total bookings, room nights and cancellation percentage.
-    6. Calculate revenue per booking (Nights x Room_Rate) for non-canceled
-       bookings.
-    7. Compare average room rate and occupancy across room types.
-    8. Rank booking channels by volume and revenue.
-    9. Analyse cancellation rates by channel and lead-time band.
-   10. Find the top 3 peak revenue months.
-   11. Compare average stay of leisure and business travellers.
-   12. Calculate mean, median and standard deviation of daily room rates
-       with NumPy.
-   13. Find unusually high booking values with the IQR method.
-   14. Create lead-time categories with pd.cut().
-   15. Present five revenue and operations recommendations.
-   Extra: monthly occupancy trend (with a text chart) and arrivals by weekday.
-
-2.3 User classes
-    Student / analyst  : runs the script and reads the results.
-    Hotel management   : reads the results and recommendations to make pricing
-                         and staffing decisions.
-
-2.4 Operating environment
-    - Windows, macOS or Linux, tested for use in Visual Studio Code
-    - Python 3.10 or newer
-    - Libraries: pandas and NumPy only
-
-2.5 Design and implementation constraints
-    C-1  Only pandas and NumPy may be used (no plotting, Excel or other
-         third-party libraries).
-    C-2  Code must be short and written in a simple, beginner-friendly style
-         (no classes, no custom functions).
-    C-3  All output must appear in the terminal only. No files are written.
-    C-4  The input file must be named 13_hotel_bookings.csv and be in the
-         folder from which the script is run.
-
-2.6 Assumptions and dependencies
-    A-1  The data is synthetic (generated for this project).
-    A-2  The hotel has 12 rooms: Standard 4, Deluxe 3, Executive 2,
-         Family Suite 1, Presidential Suite 1, Budget Single 1. These numbers
-         are set in the "rooms" dictionary at the top of the script and can be
-         changed to match a real hotel.
-    A-3  Only the status "Canceled" counts as canceled. "Completed" and
-         "No-Show" bookings count as non-canceled.
-    A-4  The data covers one full year (2025), so each month appears once.
-
+Input    : 13_hotel_bookings.csv - 612 rows, 12 columns, 2025 bookings
+           (Booking_ID, Guest_ID, Booking_Date, Checkin_Date, Nights,
+           Lead_Time_Days, Room_Type, Guests, Booking_Channel, Travel_Purpose,
+           Room_Rate, Booking_Status)
+Output   : Text in the terminal only.
+Users    : Student / analyst running the script; hotel management reading the
+           results.
+Platform : Python 3.10+, Visual Studio Code, any operating system.
+Libraries: pandas and NumPy only.
+Constraints / assumptions:
+  - Simple beginner-style code (no classes or custom functions).
+  - Data is synthetic; the hotel is assumed to have 12 rooms.
+  - Only Booking_Status "Canceled" counts as canceled.
 
 --------------------------------------------------------------------------------
-3. DATA REQUIREMENTS
+3. FUNCTIONAL REQUIREMENTS
 --------------------------------------------------------------------------------
-
-3.1 Input file
-    Name   : 13_hotel_bookings.csv
-    Format : CSV, comma separated, first row is the header
-    Size   : 612 rows (600 unique bookings + 12 duplicate rows), 12 columns
-    Period : check-in dates from 1 January 2025 to 31 December 2025
-
-3.2 Data dictionary
-    Column            Type      Description
-    ----------------  --------  ----------------------------------------------
-    Booking_ID        text      Booking identifier (e.g. BK102850); should be
-                                unique
-    Guest_ID          text      Guest identifier (e.g. G01463)
-    Booking_Date      date      Date the booking was made (YYYY-MM-DD)
-    Checkin_Date      date      Arrival date (YYYY-MM-DD, read as text first)
-    Nights            integer   Length of stay in nights
-    Lead_Time_Days    decimal   Days from booking to check-in (has gaps)
-    Room_Type         text      Standard, Deluxe, Executive, Family Suite,
-                                Presidential Suite, Budget Single
-    Guests            integer   Number of guests
-    Booking_Channel   text      Direct Website, Walk-in, Phone, Corporate,
-                                Travel Agent, OTA - MakeMyTrip,
-                                OTA - Booking.com, OTA - Agoda
-    Travel_Purpose    text      Leisure, Business, Family Visit,
-                                Event/Wedding, Transit
-    Room_Rate         decimal   Price per room per night in Rs (has gaps)
-    Booking_Status    text      Completed, Canceled, No-Show
-
-3.3 Known data-quality issues (deliberately present)
-    - 18 missing Lead_Time_Days values
-    - 15 missing Room_Rate values
-    - 12 duplicate Booking_ID rows
-    The program must detect and handle all of these (see FR-2 and FR-3).
-
+FR-1   Load the CSV and show shape, first rows and column info.
+FR-2   Report missing values and duplicate Booking_ID rows; remove duplicates.
+FR-3   Fill missing Lead_Time_Days (recalculate from Checkin_Date minus
+       Booking_Date) and Room_Rate (median of the same Room_Type).
+FR-4   Convert Checkin_Date to datetime; extract arrival month and weekday.
+FR-5   Calculate total bookings, total room nights and cancellation %.
+FR-6   Calculate revenue = Nights x Room_Rate for non-canceled bookings.
+FR-7   Compare average room rate and occupancy across room types.
+FR-8   Rank booking channels by booking volume and by revenue.
+FR-9   Show cancellation rates by booking channel and lead-time band.
+FR-10  Find the top 3 peak revenue months.
+FR-11  Compare average stay of leisure and business travellers.
+FR-12  Use NumPy to get mean, median and standard deviation of daily rates.
+FR-13  Find unusually high booking values with the IQR method.
+FR-14  Create lead-time categories with pd.cut() (Last-Minute, Short-Term,
+       Medium, Advance).
+FR-15  Print five revenue and operations recommendations.
+Extra  Monthly occupancy trend and arrivals by weekday.
 
 --------------------------------------------------------------------------------
-4. FUNCTIONAL REQUIREMENTS
+4. NON-FUNCTIONAL REQUIREMENTS
 --------------------------------------------------------------------------------
-
-Each requirement is numbered to match the task number in the assignment.
-
-FR-1  Load and inspect
-      The system shall read the CSV file and print the number of rows and
-      columns, the first five rows, the column types with non-null counts and
-      a statistical summary of the numeric columns.
-
-FR-2  Missing values and duplicates
-      The system shall print the number of missing values per column, count
-      the duplicate Booking_ID rows, remove the duplicates (keeping the first
-      copy) and print the number of rows left.
-
-FR-3  Handle missing values
-      Lead_Time_Days: the system shall recalculate each missing value as
-        Checkin_Date minus Booking_Date (in days). Justification: the value
-        can be derived exactly from two other columns, so no estimate is
-        needed.
-      Room_Rate: the system shall fill each missing value with the median
-        Room_Rate of the same Room_Type. Justification: rates differ a lot by
-        room type and a few expensive suites would distort a mean; the median
-        is not pulled up by extreme values.
-      The system shall print how many values were filled and confirm that no
-      missing values remain.
-
-FR-4  Dates
-      The system shall convert Checkin_Date to datetime and add the columns
-      Arrival_Month (1-12), Arrival_Month_Name, Arrival_Weekday and
-      Year_Month (YYYY-MM).
-
-FR-5  Totals
-      The system shall print the total number of bookings, the total room
-      nights (all bookings and non-canceled only) and the overall
-      cancellation percentage with the cancelled count.
-
-FR-6  Revenue
-      The system shall calculate for each row:
-         Revenue = Nights x Room_Rate   if the booking is not canceled
-         Revenue = 0                    if the booking is canceled
-      and print the total realised revenue.
-
-FR-7  Room-type comparison
-      The system shall print, for each room type: bookings, room nights,
-      average rate, median rate, revenue, revenue share %, rooms available,
-      occupancy % and RevPAR, sorted by revenue.
-      Occupancy % = room nights / (rooms x number of days in the data) x 100.
-      The system shall also print a Room_Type x Booking_Channel summary
-      (bookings, average rate, revenue) using a two-column groupby.
-
-FR-8  Channel ranking
-      The system shall rank booking channels by number of bookings (volume)
-      and by revenue, and show bookings, non-canceled bookings, revenue,
-      average rate and revenue per booking.
-
-FR-9  Cancellation analysis
-      The system shall print the cancellation rate and lost revenue per
-      booking channel, the cancellation rate per lead-time band, and a table
-      of cancellation % by channel and lead-time band.
-
-FR-10 Peak months
-      The system shall list the three months (Year_Month) with the highest
-      revenue.
-
-FR-11 Stay duration
-      The system shall print the number of bookings, mean and median nights
-      for each travel purpose, and show leisure versus business separately.
-
-FR-12 NumPy statistics
-      The system shall use NumPy to calculate and print the mean, median and
-      standard deviation of room rates, per booking and as a daily average
-      (average rate of each arrival date).
-
-FR-13 High booking values (IQR)
-      The system shall use np.percentile to get Q1 and Q3, calculate
-         upper fence = Q3 + 1.5 x (Q3 - Q1)
-      and report the bookings above it: their count, share of bookings, share
-      of revenue, breakdown by room type and the top 8 bookings.
-
-FR-14 Lead-time categories
-      The system shall use pd.cut() to create four lead-time bands:
-         Last-Minute (0-3 days), Short-Term (4-14 days),
-         Medium (15-60 days), Advance (60+ days)
-      and print the number of bookings in each.
-
-FR-15 Recommendations
-      The system shall print five numbered recommendations for hotel
-      management on pricing, cancellation control, deposits, front-desk
-      staffing and high-value room types. Numbers in the text shall be taken
-      from the calculated results, not typed in by hand.
-
-FR-16 Monthly occupancy trend (extra)
-      The system shall print room nights sold, occupancy % and revenue for
-      each month, and a text bar chart where each "#" equals 2 percentage
-      points. Room nights are counted in the month of arrival.
-
-FR-17 Arrivals by weekday (extra)
-      The system shall print the number and share of non-canceled arrivals for
-      each weekday, in Monday-to-Sunday order, to support front-desk
-      staffing.
-
-FR-18 Output layout
-      Each task shall start with a banner (a line of "=" characters, the task
-      number and title). The terminal width shall be set so that wide tables
-      are not wrapped.
-
+  - Easy to read: one short block per task, with comments.
+  - Fast: finishes in a few seconds.
+  - Reliable: runs from start to end without errors or warnings.
+  - Safe: does not change the input file or create any file.
 
 --------------------------------------------------------------------------------
-5. NON-FUNCTIONAL REQUIREMENTS
+5. HOW TO RUN
 --------------------------------------------------------------------------------
-
-NFR-1 Simplicity   The code shall be easy to read for a beginner: one block per
-                   task, short comments, only basic pandas and NumPy methods.
-NFR-2 Size         The script shall stay short (about 175 lines).
-NFR-3 Performance  The whole analysis shall finish in a few seconds on a
-                   normal computer.
-NFR-4 Reliability  The script shall run without errors and without warnings on
-                   the supplied dataset. If the CSV is missing, Python shows a
-                   clear FileNotFoundError.
-NFR-5 Portability  The script shall run on Windows, macOS and Linux with
-                   Python 3.10+, pandas and NumPy installed.
-NFR-6 Safety       The script shall not change the input file and shall not
-                   create or overwrite any file.
-NFR-7 Accuracy     Calculations shall be reproducible: the same input always
-                   gives the same output.
-NFR-8 Output       Output shall be plain ASCII text (use "Rs" for rupees) so it
-                   displays correctly in any terminal.
-
+  1. Put hotel_analysis.py and 13_hotel_bookings.csv in the same folder.
+  2. pip install pandas numpy        (first time only)
+  3. python hotel_analysis.py
 
 --------------------------------------------------------------------------------
-6. EXTERNAL INTERFACE REQUIREMENTS
+6. ACCEPTANCE CRITERIA
 --------------------------------------------------------------------------------
-
-6.1 User interface
-    Command line only. Run from the folder that holds the script and the CSV:
-         python hotel_analysis.py
-
-6.2 Software interfaces
-    - Python 3.10+ interpreter
-    - pandas (data tables, groupby, pd.cut, datetime tools)
-    - NumPy (np.where, np.mean, np.median, np.std, np.percentile)
-    Install with:  pip install pandas numpy
-
-6.3 Hardware interfaces
-    None. Any computer that can run Python and show a terminal.
-
-6.4 File interfaces
-    Input : 13_hotel_bookings.csv (read only)
-    Output: none (terminal text only)
-
-
---------------------------------------------------------------------------------
-7. HOW TO RUN
---------------------------------------------------------------------------------
-
-    1. Put hotel_analysis.py and 13_hotel_bookings.csv in the same folder.
-    2. Open that folder in Visual Studio Code and open a terminal.
-    3. Run:  pip install pandas numpy        (first time only)
-    4. Run:  python hotel_analysis.py
-    5. Scroll the terminal to read the results of each task.
-
-
---------------------------------------------------------------------------------
-8. VERIFICATION AND ACCEPTANCE CRITERIA
---------------------------------------------------------------------------------
-
-With the supplied dataset (612 rows) the program is correct if:
-
-    AC-1  Task 1 shows 612 rows and 12 columns.
-    AC-2  Task 2 reports 18 missing Lead_Time_Days, 15 missing Room_Rate and
-          12 duplicate Booking_ID rows; 600 rows remain.
-    AC-3  Task 3 leaves 0 missing values.
-    AC-4  Task 5 shows 600 total bookings and a cancellation rate of 21.67%.
-    AC-5  Task 6 shows total realised revenue of Rs 7,400,750.
-    AC-6  Task 14 shows four lead-time bands whose counts add up to 600.
-    AC-7  Task 15 prints five numbered recommendations.
-    AC-8  Running the script creates no new files in the folder.
-    AC-9  The script runs from start to end without an error message.
-
-
---------------------------------------------------------------------------------
-9. LIMITATIONS AND FUTURE ENHANCEMENTS
---------------------------------------------------------------------------------
-
-Limitations
-    - The data is synthetic, so findings illustrate the method and are not
-      real market conclusions.
-    - The room count (12 rooms) is an assumption; occupancy and RevPAR depend
-      on it.
-    - Room nights are counted in the arrival month, so a stay that crosses a
-      month end is not split between months.
-    - OTA commissions and operating costs are not in the data, so channel
-      profit is judged on gross revenue and cancellation risk only.
-    - No-Show bookings count as non-canceled, as the assignment only excludes
-      "Canceled" from revenue.
-
-Future enhancements
-    - Charts (for example with matplotlib) and an Excel or HTML report.
-    - Split multi-night stays across months for exact monthly occupancy.
-    - Add commission data to compare channel profitability.
-    - Forecast demand and cancellations with a simple model.
-
-
-================================================================================
-END OF DOCUMENT
-================================================================================
+  - 612 rows are loaded; 12 duplicates removed, leaving 600 bookings.
+  - 18 missing Lead_Time_Days and 15 missing Room_Rate values are filled.
+  - Cancellation rate is 21.67% and total revenue is Rs 7,400,750.
+  - Five numbered recommendations are printed.
