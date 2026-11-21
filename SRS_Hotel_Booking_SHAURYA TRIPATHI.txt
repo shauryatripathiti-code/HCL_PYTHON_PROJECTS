@@ -2,7 +2,7 @@ SOFTWARE REQUIREMENTS SPECIFICATION (SRS)
 Project  : Hotel Bookings Analysis (Hospitality / Tourism)
 Author   : Shaurya
 Date     : 21 November 2026
-Version  : 1.0
+GitHub   : https://github.com/shauryatripathiti-code/HCL_PYTHON_PROJECTS.git
 
 --------------------------------------------------------------------------------
 1. INTRODUCTION
