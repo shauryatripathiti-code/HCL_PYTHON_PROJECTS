@@ -1,3 +1,4 @@
+# Hotel Bookings Analysis (pandas and numpy only)
 import pandas as pd
 import numpy as np
 
@@ -172,3 +173,7 @@ print(f"   {stay.loc['Business', 'mean']} nights (leisure {stay.loc['Leisure', '
 print(f"\n5. Protect high-value stays and fix weak room types. {len(high)} bookings above Rs {limit:,.0f} bring {share:.0f}% of revenue:")
 print(f"   promote suites to direct and corporate guests. {revpar.idxmax()} earns the most per room per day and")
 print(f"   {revpar.idxmin()} the least, so review its price.")
+
+# Save the cleaned data (with the new columns) as the single CSV output
+df.to_csv("hotel_bookings_cleaned.csv", index=False)
+print("\nSaved the cleaned data to hotel_bookings_cleaned.csv")
